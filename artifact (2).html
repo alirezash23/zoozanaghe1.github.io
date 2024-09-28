@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مینی اپ تلگرام ساده</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/6.7.0/telegram-web-app.min.js"></script>
+<style>
+body {
+font-family: Arial, sans-serif;
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+margin: 0;
+background-color: #f0f0f0;
+}
+button {
+padding: 10px 20px;
+font-size: 16px;
+background-color: #0088cc;
+color: white;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+}
+</style>
+</head>
+<body>
+<button id="showMessageBtn">نمایش پیام</button>
+
+<script>
+let tg = window.Telegram.WebApp;
+
+tg.expand();
+
+let button = document.getElementById("showMessageBtn");
+
+button.addEventListener("click", () => {
+tg.showPopup({
+title: "سلام!",
+message: "این یک مینی اپ ساده در تلگرام است.",
+buttons: [{ type: "ok" }]
+});
+});
+</script>
+</body>
+</html>
