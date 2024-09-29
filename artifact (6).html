@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مشاور هوشمند کسب و کار</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.31/vue.global.prod.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+<style>
+:root {
+--primary-color: #2c3e50;
+--secondary-color: #ecf0f1;
+--accent-color: #3498db;
+}
+body {
+font-family: 'Vazir', Arial, sans-serif;
+background-color: var(--secondary-color);
+color: var(--primary-color);
+margin: 0;
+padding: 0;
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+}
+#app {
+width: 100%;
+max-width: 800px;
+background-color: #fff;
+box-shadow: 0 0 20px rgba(0,0,0,0.1);
+border-radius: 10px;
+padding: 20px;
+}
+h1, h2 {
+text-align: center;
+color: var(--accent-color);
+}
+.question {
+margin-bottom: 20px;
+}
+label {
+display: block;
+margin-bottom: 5px;
+font-weight: bold;
+}
+input[type="text"], textarea {
+width: 100%;
+padding: 10px;
+border: 1px solid #ddd;
+border-radius: 5px;
+font-size: 16px;
+}
+button {
+background-color: var(--accent-color);
+color: #fff;
+border: none;
+padding: 10px 20px;
+font-size: 16px;
+border-radius: 5px;
+cursor: pointer;
+transition: background-color 0.3s;
+}
+button:hover {
+background-color: #2980b9;
+}
+.results {
+margin-top: 30px;
+background-color: #f9f9f9;
+padding: 20px;
+border-radius: 5px;
+}
+.results h3 {
+color: var(--accent-color);
+}
+.results ul {
+padding-right: 20px;
+}
+.progress-bar {
+width: 100%;
+background-color: #ddd;
+height: 5px;
+margin-bottom: 20px;
+border-radius: 5px;
+overflow: hidden;
+}
+.progress {
+height: 100%;
+background-color: var(--accent-color);
+transition: width 0.5s ease-in-out;
+}
+.chart-container {
+margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<div id="app">
+<h1>مشاور هوشمند کسب و کار</h1>
+<div class="progress-bar">
+<div class="progress" :style="{ width: progress + '%' }"></div>
+</div>
+<div v-if="currentStep < questions.length">
+<div class="question">
+<label>{{ questions[currentStep].question }}</label>
+<textarea v-model="answers[currentStep]" rows="4"></textarea>
+</div>
+<button @click="nextQuestion">{{ currentStep === questions.length - 1 ? 'دریافت تحلیل' : 'سوال بعدی' }}</button>
+</div>
+<div v-else class="results">
+<h2>تحلیل جامع کسب و کار شما</h2>
+<div v-for="(category, index) in analysisResults" :key="index">
+<h3>{{ category.title }}</h3>
+<ul>
+<li v-for="(item, itemIndex) in category.items" :key="itemIndex">{{ item }}</li>
+</ul>
+</div>
+<div class="chart-container">
+<canvas id="businessChart"></canvas>
+</div>
+</div>
+</div>
+
+<script>
+const app = Vue.createApp({
+data() {
+return {
+currentStep: 0,
+questions: [
+{ question: "استراتژی: اهداف اصلی و چشم‌انداز کسب و کار شما چیست؟" },
+{ question: "ساختار: ساختار سازمانی و نحوه تقسیم مسئولیت‌ها را توضیح دهید." },
+{ question: "سیستم‌ها: چه فرآیندها و روش‌هایی برای مدیریت عملیات روزانه دارید؟" },
+{ question: "سبک: فرهنگ سازمانی و سبک رهبری در شرکت شما چگونه است؟" },
+{ question: "کارکنان: ترکیب نیروی کار و مهارت‌های کلیدی موجود را شرح دهید." },
+{ question: "مهارت‌ها: قابلیت‌های متمایز و نقاط قوت اصلی سازمان شما چیست؟" },
+{ question: "ارزش‌های مشترک: چه اصول و باورهایی در سازمان شما مشترک است؟" }
+],
+answers: [],
+analysisResults: []
+}
+},
+computed: {
+progress() {
+return (this.currentStep / this.questions.length) * 100;
+}
+},
+methods: {
+nextQuestion() {
+if (this.currentStep < this.questions.length - 1) {
+this.currentStep++;
+} else {
+this.analyzeBusiness();
+}
+},
+analyzeBusiness() {
+// شبیه‌سازی تحلیل هوش مصنوعی
+const aiAnalysis = this.simulateAIAnalysis(this.answers);
+this.analysisResults = aiAnalysis;
+this.$nextTick(() => {
+this.createChart(aiAnalysis);
+});
+},
+simulateAIAnalysis(answers) {
+// این تابع یک تحلیل ساده‌سازی شده را شبیه‌سازی می‌کند
+const categories = ['استراتژی', 'ساختار', 'سیستم‌ها', 'سبک', 'کارکنان', 'مهارت‌ها', 'ارزش‌های مشترک'];
+return categories.map((category, index) => {
+const score = this.calculateScore(answers[index]);
+return {
+title: category,
+score: score,
+items: this.generateRecommendations(category, score, answers[index])
+};
+});
+},
+calculateScore(answer) {
+// محاسبه ساده امتیاز بر اساس طول پاسخ و کلمات کلیدی
+const keywords = ['استراتژی', 'هدف', 'بهبود', 'نوآوری', 'کارایی', 'رشد'];
+const wordCount = answer.split(' ').length;
+const keywordCount = keywords.filter(keyword => answer.includes(keyword)).length;
+return Math.min(Math.round((wordCount / 20 + keywordCount) * 10), 100);
+},
+generateRecommendations(category, score, answer) {
+const lowScoreRecommendations = {
+'استراتژی': 'تدوین یک برنامه استراتژیک جامع و مشخص برای هدایت سازمان',
+'ساختار': 'بازنگری در ساختار سازمانی برای افزایش انعطاف‌پذیری و کارایی',
+'سیستم‌ها': 'پیاده‌سازی سیستم‌های مدیریت فرآیند کسب و کار (BPM) برای بهبود عملیات',
+'سبک': 'توسعه سبک رهبری مشارکتی و فرهنگ سازمانی پویا',
+'کارکنان': 'اجرای برنامه‌های توسعه مهارت و استعدادیابی برای کارکنان',
+'مهارت‌ها': 'سرمایه‌گذاری در آموزش و توسعه مهارت‌های کلیدی مورد نیاز سازمان',
+'ارزش‌های مشترک': 'تقویت ارزش‌های سازمانی و ایجاد برنامه‌های فرهنگ‌سازی'
+};
+const highScoreRecommendations = {
+'استراتژی': 'بهینه‌سازی استراتژی فعلی و بررسی فرصت‌های جدید بازار',
+'ساختار': 'پیاده‌سازی ساختارهای چابک برای پاسخگویی سریع به تغییرات بازار',
+'سیستم‌ها': 'به‌کارگیری فناوری‌های پیشرفته برای خودکارسازی و بهبود فرآیندها',
+'سبک': 'توسعه برنامه‌های رهبری برای مدیران میانی و ارشد',
+'کارکنان': 'ایجاد برنامه‌های انگیزشی و حفظ استعدادها',
+'مهارت‌ها': 'توسعه قابلیت‌های نوآوری و تحقیق و توسعه',
+'ارزش‌های مشترک': 'گسترش ارزش‌های سازمانی در سراسر زنجیره ارزش و شرکای تجاری'
+};
+
+let recommendations = [];
+if (score < 50) {
+recommendations.push(lowScoreRecommendations[category]);
+} else {
+recommendations.push(highScoreRecommendations[category]);
+}
+
+// اضافه کردن پیشنهادات خاص بر اساس محتوای پاسخ
+if (answer.includes('چالش') || answer.includes('مشکل')) {
+recommendations.push('شناسایی و اولویت‌بندی چالش‌های اصلی و تدوین برنامه‌های عملیاتی برای رفع آنها');
+}
+if (answer.includes('رقابت') || answer.includes('بازار')) {
+recommendations.push('انجام تحلیل رقابتی جامع و تدوین استراتژی‌های تمایز در بازار');
+}
+if (answer.includes('تکنولوژی') || answer.includes('فناوری')) {
+recommendations.push('ارزیابی و به‌روزرسانی زیرساخت‌های فناوری برای افزایش کارایی و نوآوری');
+}
+
+return recommendations;
+},
+createChart(analysisResults) {
+const ctx = document.getElementById('businessChart').getContext('2d');
+new Chart(ctx, {
+type: 'radar',
+data: {
+labels: analysisResults.map(item => item.title),
+datasets: [{
+label: 'امتیاز عملکرد',
+data: analysisResults.map(item => item.score),
+backgroundColor: 'rgba(52, 152, 219, 0.2)',
+borderColor: 'rgba(52, 152, 219, 1)',
+pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+pointBorderColor: '#fff',
+pointHoverBackgroundColor: '#fff',
+pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
+}]
+},
+options: {
+responsive: true,
+scales: {
+r: {
+angleLines: {
+display: false
+},
+suggestedMin: 0,
+suggestedMax: 100
+}
+}
+}
+});
+}
+}
+}).mount('#app');
+</script>
+</body>
+</html>
