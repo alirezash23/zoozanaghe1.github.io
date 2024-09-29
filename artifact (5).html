@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تتریس ساده</title>
+<style>
+body {
+margin: 0;
+background-color: #000;
+color: #fff;
+font-family: Arial, sans-serif;
+display: flex;
+flex-direction: column;
+align-items: center;
+height: 100vh;
+}
+canvas {
+border: 2px solid #333;
+}
+#gameInfo {
+margin-top: 20px;
+text-align: center;
+}
+button {
+margin: 10px;
+padding: 10px 20px;
+font-size: 16px;
+background-color: #4CAF50;
+color: white;
+border: none;
+cursor: pointer;
+border-radius: 5px;
+}
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="240" height="400"></canvas>
+<div id="gameInfo">
+<p>امتیاز: <span id="score">0</span></p>
+<button id="startButton">شروع بازی</button>
+<button id="recordButton">ثبت رکورد</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreElement = document.getElementById('score');
+const startButton = document.getElementById('startButton');
+const recordButton = document.getElementById('recordButton');
+
+const ROWS = 20;
+const COLS = 10;
+const BLOCK_SIZE = 20;
+const SHAPES = [
+[[1, 1, 1, 1]],
+[[1, 1], [1, 1]],
+[[1, 1, 1], [0, 1, 0]],
+[[1, 1, 1], [1, 0, 0]],
+[[1, 1, 1], [0, 0, 1]],
+[[1, 1, 0], [0, 1, 1]],
+[[0, 1, 1], [1, 1, 0]]
+];
+
+let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+let currentPiece = null;
+let score = 0;
+let gameInterval = null;
+
+function drawBlock(x, y) {
+ctx.fillStyle = '#fff';
+ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+}
+
+function drawBoard() {
+ctx.fillStyle = '#000';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+for (let row = 0; row < ROWS; row++) {
+for (let col = 0; col < COLS; col++) {
+if (board[row][col]) {
+drawBlock(col, row);
+}
+}
+}
+
+if (currentPiece) {
+for (let row = 0; row < currentPiece.shape.length; row++) {
+for (let col = 0; col < currentPiece.shape[row].length; col++) {
+if (currentPiece.shape[row][col]) {
+drawBlock(currentPiece.x + col, currentPiece.y + row);
+}
+}
+}
+}
+}
+
+function newPiece() {
+const shapeIndex = Math.floor(Math.random() * SHAPES.length);
+const shape = SHAPES[shapeIndex];
+currentPiece = {
+shape: shape,
+x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2),
+y: 0
+};
+
+if (!canMove(0, 0)) {
+gameOver();
+}
+}
+
+function canMove(offsetX, offsetY) {
+for (let row = 0; row < currentPiece.shape.length; row++) {
+for (let col = 0; col < currentPiece.shape[row].length; col++) {
+if (currentPiece.shape[row][col]) {
+const newX = currentPiece.x + col + offsetX;
+const newY = currentPiece.y + row + offsetY;
+if (newX < 0 || newX >= COLS || newY >= ROWS || (newY >= 0 && board[newY][newX])) {
+return false;
+}
+}
+}
+}
+return true;
+}
+
+function merge() {
+for (let row = 0; row < currentPiece.shape.length; row++) {
+for (let col = 0; col < currentPiece.shape[row].length; col++) {
+if (currentPiece.shape[row][col]) {
+board[currentPiece.y + row][currentPiece.x + col] = 1;
+}
+}
+}
+}
+
+function clearLines() {
+let linesCleared = 0;
+for (let row = ROWS - 1; row >= 0; row--) {
+if (board[row].every(cell => cell === 1)) {
+board.splice(row, 1);
+board.unshift(Array(COLS).fill(0));
+linesCleared++;
+}
+}
+if (linesCleared > 0) {
+score += linesCleared * 100;
+scoreElement.textContent = score;
+}
+}
+
+function moveDown() {
+if (canMove(0, 1)) {
+currentPiece.y++;
+} else {
+merge();
+clearLines();
+newPiece();
+}
+drawBoard();
+}
+
+function move(direction) {
+if (canMove(direction, 0)) {
+currentPiece.x += direction;
+drawBoard();
+}
+}
+
+function rotate() {
+const rotated = currentPiece.shape[0].map((_, i) =>
+currentPiece.shape.map(row => row[i]).reverse()
+);
+const originalShape = currentPiece.shape;
+currentPiece.shape = rotated;
+if (!canMove(0, 0)) {
+currentPiece.shape = originalShape;
+} else {
+drawBoard();
+}
+}
+
+function gameOver() {
+clearInterval(gameInterval);
+alert('بازی تمام شد! امتیاز شما: ' + score);
+}
+
+function startGame() {
+board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+score = 0;
+scoreElement.textContent = score;
+newPiece();
+if (gameInterval) clearInterval(gameInterval);
+gameInterval = setInterval(moveDown, 500);
+drawBoard();
+}
+
+function saveRecord() {
+alert('رکورد ' + score + ' امتیاز ذخیره شد!');
+// اینجا می‌توانید کد مربوط به ذخیره رکورد در سرور را اضافه کنید
+}
+
+document.addEventListener('keydown', (e) => {
+if (e.key === 'ArrowLeft') move(-1);
+if (e.key === 'ArrowRight') move(1);
+if (e.key === 'ArrowDown') moveDown();
+if (e.key === 'ArrowUp') rotate();
+});
+
+startButton.addEventListener('click', startGame);
+recordButton.addEventListener('click', saveRecord);
+
+// برای دستگاه‌های لمسی
+let touchStartX = 0;
+let touchStartY = 0;
+canvas.addEventListener('touchstart', (e) => {
+touchStartX = e.touches[0].clientX;
+touchStartY = e.touches[0].clientY;
+});
+canvas.addEventListener('touchmove', (e) => {
+e.preventDefault();
+const touchEndX = e.touches[0].clientX;
+const touchEndY = e.touches[0].clientY;
+const dx = touchEndX - touchStartX;
+const dy = touchEndY - touchStartY;
+if (Math.abs(dx) > Math.abs(dy)) {
+if (dx > 0) move(1);
+else move(-1);
+} else {
+if (dy > 0) moveDown();
+else rotate();
+}
+touchStartX = touchEndX;
+touchStartY = touchEndY;
+});
+
+drawBoard();
+</script>
+</body>
+</html>
